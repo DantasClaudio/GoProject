@@ -1,0 +1,7 @@
+.label
+{
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.5), 0, 0, 0, 1);
+    -fx-padding: 75 0 0 55;
+}
