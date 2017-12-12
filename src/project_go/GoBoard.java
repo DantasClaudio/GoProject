@@ -2,12 +2,7 @@ package project_go;
 
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Line;
 import javafx.scene.transform.Translate;
@@ -25,17 +20,13 @@ public class GoBoard extends Pane
 	private Translate[] t_horizontal;
 	private Translate[] t_vertical;
 	private int current_player;
-	private int opposing;
 	private int player1_score = 0;
 	private int player2_score = 0;
-	private int[][] surrounding;
-
+	
 	private final int EMPTY = 0;
 	private final int WHITE = 1;
 	private final int BLACK = 2;
 
-	private GameLogic logic = new GameLogic();
-	
 	Image img = new Image("file:background.jpg");
 	
 	public GoBoard()
@@ -124,54 +115,136 @@ public class GoBoard extends Pane
 		}
 	}
 
+	public int getPiece(int x, int y)
+	{
+		if (x > 6 || y > 6 || x < 0 || y < 0)
+			return -1;
+		return board[x][y];
+	}
+	
 	public void canCapture(int x, int y)
 	{
-		if (board[x - 1][y] != current_player && board[x - 1][y] != -1)
+		int toCapture = (current_player == BLACK) ? WHITE : BLACK;
+
+		if (getPiece(x - 1, y) == toCapture)
 		{
-			if (board[x - 1][y - 1] == current_player && board[x - 2][y] == current_player)
-				System.out.println("Can Capture");
+			if ((getPiece(x - 1, y - 1) == current_player || getPiece(x - 1, y - 1) == -1)
+					&& (getPiece(x - 2, y) == current_player || getPiece(x - 2, y) == -1)
+					&& (getPiece(x - 1, y + 1) == current_player || getPiece(x - 1, y + 1) == -1))
+			{
+				board[x - 1][y] = EMPTY;
+				this.getChildren().remove(renders[x - 1][y]);
+			}
 		}
 
-		if (board[x + 1][y] != current_player && board[x + 1][y] != -1)
+		if (getPiece(x + 1, y) == toCapture)
 		{
-			if (board[x + 1][y - 1] == current_player && board[x + 2][y] == current_player && board[x + 1][y + 1] == current_player)
-				System.out.println("Can Capture");
+			if ((getPiece(x + 1, y - 1) == current_player || getPiece(x + 1, y - 1) == -1) 
+					&& (getPiece(x + 2, y) == current_player || getPiece(x + 2, y) == -1)
+					&& (getPiece(x + 1, y + 1) == current_player || getPiece(x + 1, y + 1) == -1))
+			{
+				board[x + 1][y] = EMPTY;
+				this.getChildren().remove(renders[x + 1][y]);
+			}
 		}
 
-		if (board[x][y - 1] != current_player && board[x][y - 1] != -1)
+		if (getPiece(x, y - 1) == toCapture)
 		{
-			if (board[x - 1][y - 1] == current_player && board[x][y - 2] == current_player && board[x - 1][y - 1] == current_player)
-				System.out.println("Can Capture");
+			if ((getPiece(x - 1, y - 1) == current_player || getPiece(x - 1, y - 1) == -1)
+					&& (getPiece(x, y - 2) == current_player || getPiece(x, y - 2) == -1)
+					&& (getPiece(x + 1, y - 1) == current_player || getPiece(x + 1, y - 1) == -1))
+			{
+				board[x][y - 1] = EMPTY;
+				this.getChildren().remove(renders[x][y - 1]);
+			}
 		}
 
-		if (board[x][y + 1] != current_player && board[x][y + 1] != -1)
+		if (getPiece(x, y + 1) == toCapture)
 		{
-			if (board[x - 1][y + 1] == current_player && board[x][y + 2] == current_player && board[x + 1][y + 1] == current_player)
-				System.out.println("Can Capture");		
+			if ((getPiece(x - 1, y + 1) == current_player || getPiece(x - 1, y + 1) == -1) 
+				&& (getPiece(x, y + 2) == current_player || getPiece(x, y + 2) == -1)
+				&& (getPiece(x + 1, y + 1) == current_player || getPiece(x + 1, y + 1) == -1))
+			{
+				board[x][y + 1] = EMPTY;
+				this.getChildren().remove(renders[x][y + 1]);
+			}
 		}
 	}
 
+	public boolean suicideRule(int x, int y)
+	{
+		int otherPlayer = (current_player == BLACK) ? WHITE : BLACK;
+
+		if ((getPiece(x - 1, y - 1) == current_player || getPiece(x - 1, y - 1) == -1)
+				&& (getPiece(x - 2, y) == current_player || getPiece(x - 2, y) == -1)
+				&& (getPiece(x - 1, y + 1) == current_player || getPiece(x - 1, y + 1) == -1))
+			{	
+				board[x - 1][y] = EMPTY;
+				this.getChildren().remove(renders[x - 1][y]);
+			}
+
+		return false;
+	}
+	
+	public void resetBoard(Label score1, Label score2)
+	{
+		for (int i = 0; i < 7; i++)
+			for (int j = 0; j < 7; j++)
+			{
+				board[i][j] = EMPTY;
+				this.getChildren().remove(renders[i][j]);				
+			}
+		player1_score = 0;
+		player2_score = 0;
+		score1.setText("0");
+		score2.setText("0");
+		score1.setStyle("-fx-font-size: 30 px;-fx-underline: true;");
+		score2.setStyle("-fx-font-size: 15 px;-fx-underline: false;");
+		current_player = BLACK;
+	}
+	
+	public void passTurn(Label score1, Label score2)
+	{
+		if (current_player == BLACK)
+		{
+			current_player = WHITE;
+			score2.setStyle("-fx-font-size: 15 px;-fx-underline: false;");
+			score1.setStyle("-fx-font-size: 30 px;-fx-underline: true;");
+		}
+		else
+		{
+			current_player = BLACK;
+			score2.setStyle("-fx-font-size: 30 px;-fx-underline: true;");
+			score1.setStyle("-fx-font-size: 15 px;-fx-underline: false;");
+		}
+	}
+	
 	public void addScore(Label score1, Label score2)
 	{
 		if (current_player == WHITE)
 		{
 			player1_score++;
 			score1.setText("" + player1_score);
+			score1.setStyle("-fx-font-size: 15 px;-fx-underline: false;");
+			score2.setStyle("-fx-font-size: 30 px;-fx-underline: true;");
 		}
 		else
 		{
 			player2_score++;
 			score2.setText("" + player2_score);
+			score1.setStyle("-fx-font-size: 30 px;-fx-underline: true;");
+			score2.setStyle("-fx-font-size: 15 px;-fx-underline: false;");
 		}
 	}
 	
-	public void placePiece(final double x, final double y)
+	public void placePiece(final double x, final double y, Label score1, Label score2)
 	{		
 		int indexX = (int) (x / cell_width);
-		int indexY = (int) (y / cell_width);
+		int indexY = (int) (y / cell_height);
 
 		if (board[indexX][indexY] == EMPTY && current_player == BLACK)
 		{
+			addScore(score1, score2);
 			board[indexX][indexY] = BLACK;
 			renders[indexX][indexY] = new Stone(BLACK);
 			renders[indexX][indexY].resize(cell_width, cell_height);
@@ -183,6 +256,7 @@ public class GoBoard extends Pane
 		
 		else if (board[indexX][indexY] == EMPTY && current_player == WHITE)
 		{
+			addScore(score1, score2);
 			board[indexX][indexY] = WHITE;
 			renders[indexX][indexY] = new Stone(WHITE);
 			renders[indexX][indexY].resize(cell_width, cell_height);
